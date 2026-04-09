@@ -14,20 +14,21 @@ const groq = new OpenAI({
 
 async function run() {
 
-  const response = await groq.chat.completions.create({
-    temperature: 0,
-    model: "llama-3.1-8b-instant",
-    messages: [
-      {
+    const messages = [{
         role: "system",
         content: `You are a smart assistant.
         You can use webSearch tool.`
       },
       {
         role: "user",
-        content: "When iphone 16 launched ?",
-      },
-    ],
+        content: "What is current weather in New Delhi?",
+    },];
+
+    while (true) {
+      const completions = await groq.chat.completions.create({
+    temperature: 0,
+    model: "llama-3.1-8b-instant",
+    messages: messages,
     tools: [
       {
         type: "function",
@@ -47,32 +48,47 @@ async function run() {
     tool_choice: "auto"
   });
 
+  messages.push(completions.choices[0].message);
 
-  const tool_calls = response.choices[0].message.tool_calls;
+
+  const tool_calls = completions.choices[0].message.tool_calls;
 
   if (!tool_calls) {
-    console.log("Assistant:", response.choices[0].message.content);
-    return;
+    console.log("Assistant:", completions.choices[0].message.content);
+    break;
   }
 
   for (const tool of tool_calls) {
-    console.log("tool:", tool);
+    // console.log("tool:", tool);
     const functionName = tool.function.name;
     const functionParams = tool.function.arguments;
 
     if (functionName === "webSearch") {
-      const toolResult = webSearch(JSON.parse(functionParams));
-      console.log("toolResult:", toolResult);
+      const toolResult = await webSearch(JSON.parse(functionParams));
+      // console.log("toolResult:", toolResult);
+      messages.push({
+        tool_call_id: tool.id,
+        role: "tool",
+        name: functionName,
+        content: toolResult,
+      });
     }
   }
 
 }
+    }
+
 
 async function webSearch({ query }) {
   console.log("Calling web search...");
+
   const response = await tvly.search(query);
-  console.log("Web search response:", response);
-  return "Launched in September 2024";
+  // console.log("Web search response:", response);
+
+  const finalResult = response.results.map((result) => result.content).join("\n\n");
+  console.log("Final result:", finalResult);
+
+  return finalResult;
 }
 
 run();
