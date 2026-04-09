@@ -1,7 +1,11 @@
 import dotenv from "dotenv";
+import {tavily} from "@tavily/core";
+
 dotenv.config();
 
 import OpenAI from "openai";
+
+const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
 
 const groq = new OpenAI({
   apiKey: process.env.GROQ_API_KEY,
@@ -64,8 +68,10 @@ async function run() {
 
 }
 
-function webSearch({ query }) {
+async function webSearch({ query }) {
   console.log("Calling web search...");
+  const response = await tvly.search(query);
+  console.log("Web search response:", response);
   return "Launched in September 2024";
 }
 

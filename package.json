@@ -13,6 +13,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@tavily/core": "^0.7.2",
     "dotenv": "^17.3.1",
     "nodemon": "^3.1.14",
     "openai": "^6.29.0"
